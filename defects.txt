@@ -1,0 +1,54 @@
+Defect 1: Command line arguments for host and port not supported
+Location: Section 3.3
+Description: README instructs to run 'python app.py --host=0.0.0.0 --port=8080', but app.py does not parse command line arguments. The app runs on default 127.0.0.1:5000.
+Reproduction: Run the command as documented. App ignores --host and --port, runs on default.
+Error trace: No error, but binds to wrong address.
+
+Defect 2: Database path mismatch
+Location: Section 4.2
+Description: README states database is 'database.sqlite3' in 'data/' subdirectory, but code uses 'app.db' at root.
+Reproduction: Check app.config['DATABASE'] in app.py.
+Error trace: N/A
+
+Defect 3: Password minimum length mismatch
+Location: Section 6.1
+Description: README states minimum length 3, but code requires 6.
+Reproduction: Check RegisterForm in auth.py.
+Error trace: N/A
+
+Defect 4: Sessions not stored in Redis
+Location: Section 4.3
+Description: README claims sessions are stored in Redis with in-memory fallback, but code uses Flask-Login default (client-side sessions).
+Reproduction: No Redis configuration in app.py.
+Error trace: N/A
+
+Defect 5: /profile route not implemented
+Location: Section 5.1
+Description: README mentions '/profile' route for viewing/updating profile, but not present in code.
+Reproduction: Check routes in app.py and auth.py.
+Error trace: 404 on /profile
+
+Defect 6: Email field required in registration
+Location: Section 6.1
+Description: README states email is optional, but code requires it.
+Reproduction: RegisterForm has DataRequired for email.
+Error trace: Form validation fails if email empty.
+
+Defect 7: Inconsistent host/port in documentation
+Location: Section 3.3
+Description: Command uses --host=0.0.0.0 --port=8080, but browser access says 127.0.0.1:5000.
+Reproduction: Follow instructions, app runs on 127.0.0.1:5000.
+Error trace: N/A
+
+Defect 8: Secret key not loaded from environment
+Location: Section 4.1
+Description: README says uses FLASK_SECRET env var, but code has hardcoded 'replace-with-a-strong-secret-key'.
+Reproduction: Check app.config['SECRET_KEY'].
+Error trace: N/A
+
+Defect 9: SESSIONLESS_MODE not implemented
+Location: Section 4.3
+Description: README mentions SESSIONLESS_MODE=true for stateless API, but not implemented.
+Reproduction: Set env var, app still uses sessions.
+Error trace: N/A</content>
+<parameter name="filePath">d:\mins_project\model_test\Documentation & knowledge\1209\grok-fast\defects.txt
