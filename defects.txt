@@ -1,0 +1,41 @@
+Defect 1: Command-line flags (--host/--port) mentioned in README are ineffective
+Location in README: Section 3.3 "Start the App"
+Description: README shows `python app.py --host=0.0.0.0 --port=8080` as the start command and claims the server will bind to 0.0.0.0:8080. The project entrypoint `app.py` calls `app.run(debug=True)` unconditionally and does not parse or forward CLI parameters.
+Reproduction steps:
+  1. From project directory run: `python app.py --host=0.0.0.0 --port=8080`
+  2. Observe that the app binds to http://127.0.0.1:5000 instead of the documented address.
+Observed trace (partial):
+  * Serving Flask app 'app'
+  * Debug mode: on
+  WARNING: This is a development server. Do not use it in a production deployment.
+  * Running on http://127.0.0.1:5000
+
+Defect 2: Database location mismatch
+Location in README: Section 4.2 "Database"
+Description: README describes `app.config['DATABASE'] = 'data/database.sqlite3'` and that database file will be under data/. Actual `app.py` sets `app.config['DATABASE'] = 'app.db'` so the DB is created at project root and has a different filename.
+Reproduction steps:
+  1. Start the app, then list files in project root.
+  2. `app.db` exists; no `data/database.sqlite3` created.
+
+Defect 3: Session backend claim (Redis) is not implemented
+Location in README: Section 4.3 "Sessions & Login"
+Description: README states "Sessions are stored server-side in Redis" and mentions `SESSIONLESS_MODE`. The codebase provides no Redis integration and makes no use of a SESSIONLESS_MODE environment variable.
+Reproduction steps:
+  1. Search code for references to Redis or SESSIONLESS_MODE (none found).
+  2. Start the app and inspect cookie/session behavior — it is Flask's default client-side session handling.
+
+Defect 4: /profile route documented but not implemented
+Location in README: Section 5.1 "Blueprints and Entry Routes"
+Description: README lists `/profile` as provided by `auth.py` but `auth.py` only defines `/login`, `/register`, `/logout`.
+Reproduction steps:
+  1. Start the app and request GET /profile
+  2. Response: 404 Not Found
+
+Defect 5: Registration form & validation inconsistencies
+Location in README: Section 6.1 "Registration"
+Description: README says password minimum length is 3 and that email is optional; the real implementation enforces a password minimum length of 6 and requires an email (`DataRequired`).
+Reproduction steps:
+  1. Visit /register and inspect form validators (RegisterForm requires Email and length >= 6).
+  2. Attempt to register with password length 4 or omit email results in validation errors.
+
+Notes and impact: None of these defects are security-critical for demo usage, but they cause user confusion when following the textual onboarding steps in the README. The tests added to the repo (tests/test_auth.py) reproduce expected behavior for register/login flows and were used to validate fixes.
