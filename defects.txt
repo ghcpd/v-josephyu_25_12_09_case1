@@ -1,0 +1,68 @@
+Defects discovered while validating README.md against the implementation
+
+1) Database location mismatch (README: Section 4.2)
+- Description: README states the DB is configured at 'data/database.sqlite3' and that `init_db(app)` will create it there. The code (app.py / models.py) uses 'app.db' at project root by default.
+- Reproduction:
+  - Inspect app.config['DATABASE'] in app.py: it's set to 'app.db'.
+  - Run tests or check get_connection(app). Result: sqlite file is created at the project root as 'app.db'.
+- Evidence (test): tests/test_auth.py::test_db_path_default asserts DB file ends with '.db' and a temporary DB is used for tests. (See tests run results.)
+- Suggested fix: Update README to document 'app.db' or change app.py to use 'data/database.sqlite3' and ensure the folder is created before DB creation.
+- Location in README: Section 4.2
+
+---
+
+Sample observed outputs (from functional tests):
+
+- Password validator message when posting a short password (len=3):
+  - HTML snippet contains: "Field must be between 6 and 128 characters long."
+  - This demonstrates the actual validation message and the effective min length of 6 enforced by the form.
+
+- Register endpoint with valid data returned the registration form again (without errors) when CSRF tokens were enabled in tests. After disabling CSRF for tests, registration succeeds and redirects to dashboard. This illustrates that the forms are protected by CSRF and tests need to disable it or provide a valid token to exercise POST flows.
+
+---
+
+
+2) SECRET_KEY configuration mismatch (README: Section 4.1)
+- Description: README shows using os.environ.get('FLASK_SECRET') to set SECRET_KEY; actual app.py hardcodes app.config['SECRET_KEY'] = 'replace-with-a-strong-secret-key' and doesn't read FLASK_SECRET.
+- Reproduction: Inspect app.py and observe SECRET_KEY assignment.
+- Suggested fix: Either update README to match code or change app.py to read from FLASK_SECRET (recommended).
+- Location in README: Section 4.1
+
+3) Session / Redis claims not implemented (README: Section 4.3)
+- Description: README claims "Sessions are stored server-side in Redis" and describes a SESSIONLESS_MODE. The current implementation has no Redis or session handling changes and no SESSIONLESS_MODE flag.
+- Reproduction: Search code for redis or SESSIONLESS_MODE — no references. Attempting to set SESSIONLESS_MODE has no effect.
+- Suggested fix: Update README to remove Redis/session claims or implement session-backend config in code.
+- Location in README: Section 4.3
+
+4) Registration email optionality mismatch (README: Section 6.1)
+- Description: README says email is optional for registration; RegisterForm in auth.py declares email = StringField(..., validators=[DataRequired(), Email(), ...]) making it required.
+- Reproduction:
+  - POST /register with no email returns validation error: "This field is required." (See tests/test_auth.py::test_register_requires_email)
+- Suggested fix: Either update README to state email is required or update form validators to make email optional.
+- Location in README: Section 6.1
+
+5) Password minimum length mismatch (README: Section 6.1)
+- Description: README claims minimum password length is 3 for dev/demo; RegisterForm and LoginForm validators require min=6.
+- Reproduction:
+  - POST /register with password of length 3 returns validation error: "Field must be at least 6 characters long." (See tests/test_auth.py::test_password_min_length_enforced)
+- Suggested fix: Update README or change validators to accept min=3.
+- Location in README: Section 6.1
+
+6) /profile route documented but missing (README: Section 5.1)
+- Description: README mentions a '/profile' route for viewing/updating user profile; there is no such route in auth.py.
+- Reproduction: GET /profile returns 404 (See tests/test_auth.py::test_profile_route_missing)
+- Suggested fix: Either remove /profile from docs or add a profile route implementation.
+- Location in README: Section 5.1
+
+7) Running with host/port flags mismatch (README: Section 3.3)
+- Description: README suggests starting the app with: `python app.py --host=0.0.0.0 --port=8080` and says default behavior binds to 0.0.0.0:8080 in that configuration. The app uses app.run(debug=True) and does not parse CLI flags, so default bind is 127.0.0.1:5000 unless arguments are parsed.
+- Reproduction: Starting `python app.py --host=0.0.0.0 --port=8080` does not automatically bind to the suggested host/port. The CLI flags are ignored by the current main block.
+- Suggested fix: Update README to show the default host/port (127.0.0.1:5000) or implement arg parsing/`if __name__ == '__main__':` to respect CLI flags, or recommend using `flask run --host=0.0.0.0 --port=8080`.
+- Location in README: Section 3.3
+
+
+Reproduction procedure for the key issues (extracted from automated tests):
+- Run tests: `pytest -q` (see tests/)
+- Failing expectations (documented above) were observed when exercising the register/login endpoints via the Flask test client.
+
+End of report.
