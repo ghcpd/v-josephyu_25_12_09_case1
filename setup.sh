@@ -1,0 +1,13 @@
+#!/bin/bash
+# Setup script for Linux/Mac
+
+# Create virtual environment
+python3 -m venv .venv
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+echo "Setup complete. Run 'source .venv/bin/activate' then 'python app.py' to start the app."
